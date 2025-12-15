@@ -119,4 +119,20 @@ window.Script3 = function()
 
 }
 
+window.Script4 = function()
+{
+  sendXAPI({
+  verb: "answered",
+  objectId: "https://dcgal1962.github.io/IATID/story.html#decision-D2",
+  objectName: "Decision D2: Document and Continue",
+  decisionId: "D2",
+  decisionLabel: "Document and Continue",
+  decisionPath: "Document",
+  riskScore: 2,
+  confidence: 4,
+  flagHighRisk: false
+});
+
+}
+
 };
