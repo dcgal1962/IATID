@@ -18,12 +18,22 @@ window.Script1 = function()
   (function () {
   var p = GetPlayer();
 
-  var statement = {
+  // Create a unique session id if missing
+  var sid = p.GetVar("v_sessionId");
+  if (!sid) {
+    sid = "LE-" + new Date().toISOString().replace(/[-:.TZ]/g, "").slice(0, 14) + "-" + Math.random().toString(16).slice(2, 8);
+    p.SetVar("v_sessionId", sid);
+  }
+
+  // Optional: update lastEvent so it shows on your dashboard
+  try { p.SetVar("v_lastEvent", "Session Initialized"); } catch(e) {}
+
+  var payload = {
     type: "xapi",
     statement: {
       actor: {
         name: "Portfolio Learner",
-        mbox: "mailto:portfolio.learner@example.com"
+        mbox: "mailto:azwebproducer@gmail.com"
       },
       verb: {
         id: "https://w3id.org/xapi/adl/verbs/initialized",
@@ -38,14 +48,14 @@ window.Script1 = function()
       },
       result: {
         extensions: {
-          "https://jtld.example/xapi/ext/sessionId": p.GetVar("v_sessionId")
+          "https://jtld.example/xapi/ext/sessionId": sid
         }
       },
       timestamp: new Date().toISOString()
     }
   };
 
-  window.parent.postMessage(statement, "*");
+  window.parent.postMessage(payload, "*");
 })();
 
 }
