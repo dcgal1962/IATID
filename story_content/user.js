@@ -60,4 +60,47 @@ window.Script1 = function()
 
 }
 
+window.Script2 = function()
+{
+  (function () {
+  var p = GetPlayer();
+
+  var payload = {
+    type: "xapi",
+    statement: {
+      actor: {
+        name: "Portfolio Learner",
+        mbox: "mailto:azwebproducer@gmail.com"
+      },
+      verb: {
+        id: "http://adlnet.gov/expapi/verbs/answered",
+        display: { "en-US": "answered" }
+      },
+      object: {
+        id: window.location.href + "#decision-D1",
+        definition: {
+          name: { "en-US": "Decision D1: Escalate to Supervisor" },
+          type: "https://w3id.org/xapi/activities/interaction"
+        }
+      },
+      result: {
+        extensions: {
+          "https://jtld.example/xapi/ext/sessionId": p.GetVar("v_sessionId"),
+          "https://jtld.example/xapi/ext/decisionId": p.GetVar("v_decisionId"),
+          "https://jtld.example/xapi/ext/decisionLabel": p.GetVar("v_decisionLabel"),
+          "https://jtld.example/xapi/ext/decisionPath": p.GetVar("v_decisionPath"),
+          "https://jtld.example/xapi/ext/riskScore": p.GetVar("v_riskScore"),
+          "https://jtld.example/xapi/ext/confidence": p.GetVar("v_confidence"),
+          "https://jtld.example/xapi/ext/flagHighRisk": p.GetVar("v_flagHighRisk")
+        }
+      },
+      timestamp: new Date().toISOString()
+    }
+  };
+
+  window.parent.postMessage(payload, "*");
+})();
+
+}
+
 };
