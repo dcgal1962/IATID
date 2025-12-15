@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Learning Engineer Console – Demo</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: #0f172a;
+      color: #e5e7eb;
+    }
+    header {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 16px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+    }
+    .btn {
+      background: #2563eb;
+      color: #fff;
+      border: 0;
+      padding: 10px 12px;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    .btn.secondary {
+      background: rgba(255,255,255,.10);
+    }
+    main {
+      display: grid;
+      grid-template-columns: 1fr 420px;
+      gap: 14px;
+      padding: 14px;
+      height: calc(100vh - 60px);
+      box-sizing: border-box;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      background: #111827;
+    }
+    aside {
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 14px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-title {
+      padding: 12px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      font-weight: 600;
+    }
+    pre {
+      margin: 0;
+      padding: 12px;
+      overflow: auto;
+      font-size: 12px;
+      line-height: 1.35;
+      flex: 1;
+    }
+    .hint {
+      padding: 10px 12px;
+      border-top: 1px solid rgba(255,255,255,.08);
+      font-size: 12px;
+      color: rgba(229,231,235,.85);
+    }
+  </style>
+</head>
+
+<body>
+  <header>
+    <div>
+      <strong>Learning Engineer Console</strong>
+      <span style="opacity:.75;">| xAPI capture (no LMS)</span>
+    </div>
+    <div style="display:flex;gap:10px;">
+      <button class="btn secondary" id="clear">Clear Log</button>
+      <button class="btn" id="download">Download JSON</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- IMPORTANT: Storyline loads here -->
+    <iframe id="course" src="story.html" title="Storyline Demo"></iframe>
+
+    <aside>
+      <div class="panel-title">Captured xAPI Statements</div>
+      <pre id="log">Waiting for statements…</pre>
+      <div class="hint">
+        Tip: Click “Send xAPI Snapshot” inside the course.
+      </div>
+    </aside>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "jtld_xapi_statements_v1";
+    const logEl = document.getElementById("log");
+
+    function loadStatements() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
+      catch { return []; }
+    }
+
+    function saveStatements(items) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    }
+
+    function render(items) {
+      logEl.textContent = items.length
+        ? JSON.stringify(items, null, 2)
+        : "Waiting for statements…";
+    }
+
+    let statements = loadStatements();
+    render(statements);
+
+    window.addEventListener("message", (event) => {
+      const data = event.data;
+      if (!data || data.type !== "xapi" || !data.statement) return;
+
+      statements.push(data.statement);
+      saveStatements(statements);
+      render(statements);
+      console.log("xAPI captured:", data.statement);
+    });
+
+    document.getElementById("clear").addEventListener("click", () => {
+      statements = [];
+      saveStatements(statements);
+      render(statements);
+    });
+
+    document.getElementById("download").addEventListener("click", () => {
+      const blob = new Blob(
+        [JSON.stringify(statements, null, 2)],
+        { type: "application/json" }
+      );
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "xapi-statements.json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+  </script>
+</body>
+</html>
+
