@@ -3,153 +3,893 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Learning Engineer Console – Demo</title>
+  <title>AM The Instructional Designer — Live xAPI Console</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
 
   <style>
-    body {
-      margin: 0;
-      font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-      background: #0f172a;
-      color: #e5e7eb;
+    /* ── RESET + TOKENS ────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #050714;
+      --bg2:          #080e24;
+      --surface:      rgba(255,255,255,.03);
+      --surface-hi:   rgba(255,255,255,.07);
+      --border:       rgba(255,255,255,.07);
+      --border-hi:    rgba(0,212,255,.25);
+
+      --cyan:         #00d4ff;
+      --cyan-dim:     rgba(0,212,255,.12);
+      --violet:       #8b5cf6;
+      --violet-dim:   rgba(139,92,246,.12);
+      --emerald:      #10b981;
+      --amber:        #f59e0b;
+      --red:          #ef4444;
+      --pink:         #e879f9;
+      --orange:       #f97316;
+      --indigo:       #6366f1;
+
+      --text:         #f0f9ff;
+      --muted:        rgba(240,249,255,.45);
+      --muted-hi:     rgba(240,249,255,.65);
+
+      --shadow-cyan:  0 0 20px rgba(0,212,255,.25), 0 0 40px rgba(0,212,255,.1);
+      --r:            14px;
+      --r-sm:         8px;
     }
-    header {
+
+    html, body {
+      height: 100%;
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', system-ui, sans-serif;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ── PARTICLE CANVAS ───────────────────────────────── */
+    #bg-canvas {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    /* ── APP SHELL ─────────────────────────────────────── */
+    #app {
+      position: relative;
+      z-index: 1;
+      height: 100vh;
+      display: grid;
+      grid-template-rows: 60px 1fr;
+    }
+
+    /* ── HEADER ────────────────────────────────────────── */
+    .hdr {
       display: flex;
-      gap: 12px;
       align-items: center;
       justify-content: space-between;
-      padding: 14px 16px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
+      padding: 0 20px;
+      background: rgba(5,7,20,.88);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border-bottom: 1px solid var(--border);
+      z-index: 10;
     }
-    .btn {
-      background: #2563eb;
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .brand-mark {
+      width: 34px;
+      height: 34px;
+      border-radius: 9px;
+      background: linear-gradient(135deg, var(--cyan) 0%, var(--violet) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 13px;
       color: #fff;
-      border: 0;
-      padding: 10px 12px;
-      border-radius: 10px;
+      letter-spacing: -.5px;
+      flex-shrink: 0;
+      animation: mark-glow 4s ease-in-out infinite;
+    }
+
+    @keyframes mark-glow {
+      0%,100% { box-shadow: var(--shadow-cyan); }
+      50%      { box-shadow: 0 0 30px rgba(0,212,255,.55), 0 0 60px rgba(0,212,255,.2); }
+    }
+
+    .brand-name {
+      font-size: 14px;
+      font-weight: 700;
+      background: linear-gradient(90deg, #fff 30%, var(--cyan) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      white-space: nowrap;
+    }
+
+    .brand-sub {
+      display: block;
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      -webkit-text-fill-color: var(--muted);
+    }
+
+    .live-chip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      padding: 5px 13px;
+      border-radius: 20px;
+      border: 1px solid rgba(16,185,129,.25);
+      background: rgba(16,185,129,.07);
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+      animation: live-blink 1.8s ease-in-out infinite;
+    }
+
+    @keyframes live-blink {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50%      { opacity: .5; transform: scale(.8); }
+    }
+
+    .live-label {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--emerald);
+    }
+
+    .actions { display: flex; gap: 8px; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      color: var(--muted-hi);
+      font: 500 12px/1 'Inter', sans-serif;
       cursor: pointer;
+      transition: background .2s, border-color .2s, color .2s, transform .15s, box-shadow .2s;
     }
-    .btn.secondary {
-      background: rgba(255,255,255,.10);
+
+    .btn:hover {
+      background: var(--surface-hi);
+      color: var(--text);
+      border-color: rgba(255,255,255,.15);
     }
-    main {
+
+    .btn:active { transform: scale(.97); }
+
+    .btn-export {
+      background: linear-gradient(135deg, rgba(0,212,255,.14), rgba(139,92,246,.14));
+      border-color: rgba(0,212,255,.28);
+      color: var(--cyan);
+    }
+
+    .btn-export:hover {
+      background: linear-gradient(135deg, rgba(0,212,255,.24), rgba(139,92,246,.24));
+      box-shadow: var(--shadow-cyan);
+      border-color: var(--cyan);
+      color: #fff;
+    }
+
+    /* ── WORKSPACE ─────────────────────────────────────── */
+    .workspace {
       display: grid;
-      grid-template-columns: 1fr 420px;
+      grid-template-columns: 1fr 362px;
       gap: 14px;
       padding: 14px;
-      height: calc(100vh - 60px);
-      box-sizing: border-box;
+      min-height: 0;
     }
-    iframe {
+
+    /* ── COURSE FRAME ──────────────────────────────────── */
+    .frame-wrap {
+      position: relative;
+      border-radius: var(--r);
+      overflow: hidden;
+      background:
+        linear-gradient(var(--bg2), var(--bg2)) padding-box,
+        linear-gradient(135deg,
+          rgba(0,212,255,.45),
+          rgba(139,92,246,.45),
+          rgba(0,212,255,.12)) border-box;
+      border: 1px solid transparent;
+      animation: frame-breathe 5s ease-in-out infinite;
+    }
+
+    @keyframes frame-breathe {
+      0%,100% { box-shadow: none; }
+      50%      { box-shadow: 0 0 40px rgba(0,212,255,.1), 0 0 80px rgba(139,92,246,.07); }
+    }
+
+    .frame-wrap iframe {
       width: 100%;
       height: 100%;
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 14px;
-      background: #111827;
+      border: none;
+      display: block;
+      border-radius: calc(var(--r) - 1px);
     }
-    aside {
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 14px;
-      overflow: hidden;
+
+    /* subtle scanline overlay */
+    .frame-wrap::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(
+        0deg, transparent, transparent 3px,
+        rgba(0,0,0,.025) 3px, rgba(0,0,0,.025) 4px
+      );
+      pointer-events: none;
+      border-radius: var(--r);
+    }
+
+    /* ── SIDEBAR ───────────────────────────────────────── */
+    .sidebar {
       display: flex;
       flex-direction: column;
+      gap: 10px;
+      min-height: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding-right: 2px;
     }
-    .panel-title {
-      padding: 12px 12px;
-      border-bottom: 1px solid rgba(255,255,255,.08);
+
+    .sidebar::-webkit-scrollbar        { width: 3px; }
+    .sidebar::-webkit-scrollbar-track  { background: transparent; }
+    .sidebar::-webkit-scrollbar-thumb  { background: rgba(255,255,255,.08); border-radius: 2px; }
+
+    /* ── CARD ──────────────────────────────────────────── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r);
+      padding: 14px;
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      animation: card-in .5s cubic-bezier(.4,0,.2,1) both;
+      flex-shrink: 0;
+    }
+
+    @keyframes card-in {
+      from { opacity: 0; transform: translateX(16px); }
+      to   { opacity: 1; transform: translateX(0); }
+    }
+
+    .card-hdr {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .card-title {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+
+    .card-chip {
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: var(--cyan-dim);
+      color: var(--cyan);
+      border: 1px solid rgba(0,212,255,.2);
+      transition: box-shadow .4s;
+    }
+
+    /* ── RING STAT ─────────────────────────────────────── */
+    .stats-grid {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .ring-wrap {
+      position: relative;
+      width: 84px;
+      height: 84px;
+      flex-shrink: 0;
+    }
+
+    .ring-svg { transform: rotate(-90deg); }
+
+    .ring-bg {
+      fill: none;
+      stroke: rgba(255,255,255,.05);
+      stroke-width: 5;
+    }
+
+    .ring-bar {
+      fill: none;
+      stroke: url(#ringGrad);
+      stroke-width: 5;
+      stroke-linecap: round;
+      stroke-dasharray: 239;
+      stroke-dashoffset: 239;
+      transition: stroke-dashoffset 1.2s cubic-bezier(.4,0,.2,1);
+      filter: drop-shadow(0 0 5px rgba(0,212,255,.7));
+    }
+
+    .ring-center {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      pointer-events: none;
+    }
+
+    .ring-num {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--cyan);
+      line-height: 1;
+    }
+
+    .ring-lbl {
+      font-size: 8px;
       font-weight: 600;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-top: 2px;
     }
-    pre {
-      margin: 0;
-      padding: 12px;
-      overflow: auto;
-      font-size: 12px;
-      line-height: 1.35;
+
+    .meta-list {
       flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
     }
-    .hint {
-      padding: 10px 12px;
-      border-top: 1px solid rgba(255,255,255,.08);
-      font-size: 12px;
-      color: rgba(229,231,235,.85);
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 5px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .meta-row:last-child { border-bottom: none; padding-bottom: 0; }
+
+    .meta-key { font-size: 10px; color: var(--muted); }
+
+    .meta-val {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text);
+      max-width: 120px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    /* ── VERB BARS ─────────────────────────────────────── */
+    .verb-list { display: flex; flex-direction: column; gap: 7px; }
+
+    .verb-row  { display: flex; flex-direction: column; gap: 3px; }
+
+    .verb-row-hdr {
+      display: flex;
+      justify-content: space-between;
+      font-size: 10px;
+    }
+
+    .verb-name { color: var(--muted-hi); text-transform: capitalize; }
+    .verb-ct   { font-weight: 700; color: var(--text); }
+
+    .bar-track {
+      height: 3px;
+      background: rgba(255,255,255,.05);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 2px;
+      width: 0;
+      transition: width 1s cubic-bezier(.4,0,.2,1);
+    }
+
+    /* ── TIMELINE ──────────────────────────────────────── */
+    .timeline {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      max-height: 120px;
+      overflow-y: auto;
+    }
+
+    .timeline::-webkit-scrollbar { width: 0; }
+
+    .tl-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      animation: tl-in .25s ease both;
+    }
+
+    @keyframes tl-in {
+      from { opacity: 0; transform: translateY(4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .tl-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+
+    .tl-verb {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: capitalize;
+      line-height: 1.2;
+    }
+
+    .tl-obj {
+      font-size: 10px;
+      color: var(--muted);
+      line-height: 1.2;
+    }
+
+    /* ── RAW LOG ───────────────────────────────────────── */
+    .log-box {
+      background: rgba(0,0,0,.55);
+      border-radius: var(--r-sm);
+      border: 1px solid var(--border);
+      padding: 10px;
+      font: 400 10.5px/1.6 'JetBrains Mono', 'Fira Code', monospace;
+      color: rgba(0,212,255,.75);
+      max-height: 130px;
+      overflow-y: auto;
+      word-break: break-all;
+    }
+
+    .log-box::-webkit-scrollbar       { width: 3px; }
+    .log-box::-webkit-scrollbar-thumb { background: rgba(0,212,255,.15); }
+
+    .log-empty {
+      color: var(--muted);
+      font-style: italic;
+      font-family: 'Inter', sans-serif;
+    }
+
+    /* ── HINT ──────────────────────────────────────────── */
+    .hint-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: var(--r-sm);
+      background: rgba(0,212,255,.04);
+      border: 1px solid rgba(0,212,255,.1);
+      font-size: 10.5px;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+
+    .hint-bar svg { flex-shrink: 0; color: var(--cyan); opacity: .7; }
+
+    /* ── EVENT FLASH ───────────────────────────────────── */
+    @keyframes chip-flash {
+      0%   { box-shadow: 0 0 0 0 rgba(0,212,255,.7); }
+      100% { box-shadow: 0 0 0 14px rgba(0,212,255,0); }
+    }
+
+    .chip-flash { animation: chip-flash .7s ease-out forwards; }
+
+    /* ── EMPTY ─────────────────────────────────────────── */
+    .empty {
+      font-size: 10.5px;
+      color: var(--muted);
+      font-style: italic;
     }
   </style>
 </head>
 
 <body>
-  <header>
-    <div>
-      <strong>Learning Engineer Console</strong>
-      <span style="opacity:.75;">| xAPI capture (no LMS)</span>
-    </div>
-    <div style="display:flex;gap:10px;">
-      <button class="btn secondary" id="clear">Clear Log</button>
-      <button class="btn" id="download">Download JSON</button>
-    </div>
-  </header>
+  <canvas id="bg-canvas"></canvas>
 
-  <main>
-    <!-- IMPORTANT: Storyline loads here -->
-    <iframe id="course" src="story.html" title="Storyline Demo"></iframe>
+  <!-- Gradient defs for ring chart -->
+  <svg width="0" height="0" aria-hidden="true" style="position:absolute">
+    <defs>
+      <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%"   stop-color="#00d4ff"/>
+        <stop offset="100%" stop-color="#8b5cf6"/>
+      </linearGradient>
+    </defs>
+  </svg>
 
-    <aside>
-      <div class="panel-title">Captured xAPI Statements</div>
-      <pre id="log">Waiting for statements…</pre>
-      <div class="hint">
-        Tip: Click “Send xAPI Snapshot” inside the course.
+  <div id="app">
+
+    <!-- ─── HEADER ──────────────────────────────────────── -->
+    <header class="hdr">
+      <div class="brand">
+        <div class="brand-mark">AM</div>
+        <div>
+          <div class="brand-name">AM The Instructional Designer</div>
+          <span class="brand-sub">Learning Engineer Console · xAPI Live Capture</span>
+        </div>
       </div>
-    </aside>
-  </main>
+
+      <div class="live-chip">
+        <div class="live-dot"></div>
+        <span class="live-label">Live</span>
+      </div>
+
+      <div class="actions">
+        <button class="btn" id="btn-clear">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polyline points="3 6 5 6 21 6"/>
+            <path d="M19 6l-1 14H6L5 6M9 6V4h6v2"/>
+            <line x1="10" y1="11" x2="10" y2="17"/>
+            <line x1="14" y1="11" x2="14" y2="17"/>
+          </svg>
+          Clear
+        </button>
+        <button class="btn btn-export" id="btn-download">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Export JSON
+        </button>
+      </div>
+    </header>
+
+    <!-- ─── WORKSPACE ────────────────────────────────────── -->
+    <div class="workspace">
+
+      <!-- Course iframe -->
+      <div class="frame-wrap">
+        <iframe id="course-frame" src="story.html"
+          title="Learning Engineer Dashboard"
+          allow="autoplay; fullscreen">
+        </iframe>
+      </div>
+
+      <!-- Sidebar -->
+      <div class="sidebar">
+
+        <!-- 1 · xAPI Stream stats -->
+        <div class="card" style="animation-delay:.08s">
+          <div class="card-hdr">
+            <span class="card-title">xAPI Stream</span>
+            <span class="card-chip" id="stmt-badge">0 statements</span>
+          </div>
+          <div class="stats-grid">
+            <div class="ring-wrap">
+              <svg class="ring-svg" width="84" height="84" viewBox="0 0 84 84">
+                <circle class="ring-bg"  cx="42" cy="42" r="38"/>
+                <circle class="ring-bar" id="ring-bar" cx="42" cy="42" r="38"/>
+              </svg>
+              <div class="ring-center">
+                <span class="ring-num" id="ring-num">0</span>
+                <span class="ring-lbl">stmts</span>
+              </div>
+            </div>
+            <div class="meta-list">
+              <div class="meta-row">
+                <span class="meta-key">Session start</span>
+                <span class="meta-val" id="meta-start">—</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-key">Latest verb</span>
+                <span class="meta-val" id="meta-verb">—</span>
+              </div>
+              <div class="meta-row">
+                <span class="meta-key">Actor</span>
+                <span class="meta-val" id="meta-actor">—</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2 · Verb breakdown -->
+        <div class="card" style="animation-delay:.16s">
+          <div class="card-hdr">
+            <span class="card-title">Verb Breakdown</span>
+          </div>
+          <div class="verb-list" id="verb-list">
+            <span class="empty">Awaiting interactions…</span>
+          </div>
+        </div>
+
+        <!-- 3 · Event timeline -->
+        <div class="card" style="animation-delay:.24s">
+          <div class="card-hdr">
+            <span class="card-title">Event Timeline</span>
+          </div>
+          <div class="timeline" id="timeline">
+            <span class="empty">No events yet…</span>
+          </div>
+        </div>
+
+        <!-- 4 · Raw JSON log -->
+        <div class="card" style="animation-delay:.32s">
+          <div class="card-hdr">
+            <span class="card-title">Raw Statements</span>
+          </div>
+          <div class="log-box" id="raw-log">
+            <span class="log-empty">Waiting for statements…</span>
+          </div>
+        </div>
+
+        <!-- Hint -->
+        <div class="hint-bar">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8"  x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+          </svg>
+          Click "Send xAPI Snapshot" inside the course to begin capturing.
+        </div>
+
+      </div><!-- /sidebar -->
+    </div><!-- /workspace -->
+  </div><!-- /app -->
 
   <script>
-    const STORAGE_KEY = "jtld_xapi_statements_v1";
-    const logEl = document.getElementById("log");
+  /* ── PARTICLE NETWORK ──────────────────────────────────── */
+  ;(function () {
+    const canvas = document.getElementById('bg-canvas');
+    const ctx    = canvas.getContext('2d');
+    const N = 70, DIST = 130, SPEED = 0.25;
+    let W, H, pts;
 
-    function loadStatements() {
-      try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); }
-      catch { return []; }
+    function init() {
+      W = canvas.width  = window.innerWidth;
+      H = canvas.height = window.innerHeight;
+      pts = Array.from({length: N}, () => ({
+        x:  Math.random() * W,
+        y:  Math.random() * H,
+        vx: (Math.random() - .5) * SPEED,
+        vy: (Math.random() - .5) * SPEED,
+        r:  Math.random() * 1.2 + .4,
+      }));
     }
 
-    function saveStatements(items) {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
+    function draw() {
+      ctx.clearRect(0, 0, W, H);
+      for (let i = 0; i < N; i++) {
+        const a = pts[i];
+        a.x += a.vx; a.y += a.vy;
+        if (a.x < 0 || a.x > W) a.vx *= -1;
+        if (a.y < 0 || a.y > H) a.vy *= -1;
+        ctx.beginPath();
+        ctx.arc(a.x, a.y, a.r, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(139,92,246,.35)';
+        ctx.fill();
+        for (let j = i + 1; j < N; j++) {
+          const b  = pts[j];
+          const dx = a.x - b.x, dy = a.y - b.y;
+          const d2 = dx*dx + dy*dy;
+          if (d2 < DIST * DIST) {
+            const a_ = (1 - Math.sqrt(d2)/DIST) * .07;
+            ctx.strokeStyle = `rgba(0,212,255,${a_})`;
+            ctx.lineWidth   = .7;
+            ctx.beginPath();
+            ctx.moveTo(a.x, a.y);
+            ctx.lineTo(b.x, b.y);
+            ctx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(draw);
     }
 
-    function render(items) {
-      logEl.textContent = items.length
-        ? JSON.stringify(items, null, 2)
-        : "Waiting for statements…";
+    init(); draw();
+    window.addEventListener('resize', init);
+  })();
+
+  /* ── xAPI CONSOLE ──────────────────────────────────────── */
+  const STORAGE_KEY = 'jtld_xapi_statements_v1';
+
+  const VERB_COLORS = {
+    initialized : '#00d4ff',
+    attempted   : '#8b5cf6',
+    completed   : '#10b981',
+    passed      : '#10b981',
+    failed      : '#ef4444',
+    answered    : '#f59e0b',
+    progressed  : '#e879f9',
+    experienced : '#6366f1',
+    interacted  : '#f97316',
+  };
+  const FALLBACK_CLR = '#94a3b8';
+
+  const CIRC = 2 * Math.PI * 38; /* r=38 */
+
+  let statements   = [];
+  let sessionStart = null;
+
+  function load()  { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch { return []; } }
+  function save(s) { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); }
+
+  function verbOf(s) {
+    const id  = s?.verb?.id || '';
+    const dis = s?.verb?.display;
+    if (dis) { const v = Object.values(dis)[0]; if (v) return v.toLowerCase(); }
+    return (id.split('/').pop() || 'unknown').toLowerCase();
+  }
+
+  function actorOf(s) {
+    return s?.actor?.name || s?.actor?.mbox?.replace('mailto:','') || '—';
+  }
+
+  function objOf(s) {
+    const nm = s?.object?.definition?.name;
+    if (nm) return Object.values(nm)[0] || '';
+    return s?.object?.id?.split('/').pop() || '';
+  }
+
+  function animCount(el, to) {
+    const from = parseInt(el.textContent) || 0;
+    if (from === to) return;
+    const t0 = performance.now(), dur = 700;
+    (function step(t) {
+      const p = Math.min((t - t0) / dur, 1);
+      const e = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(from + (to - from) * e);
+      if (p < 1) requestAnimationFrame(step);
+    })(t0);
+  }
+
+  function setRing(n, max = 25) {
+    document.getElementById('ring-bar').style.strokeDashoffset =
+      CIRC * (1 - Math.min(n / max, 1));
+  }
+
+  function flashChip() {
+    const chip = document.getElementById('stmt-badge');
+    chip.classList.remove('chip-flash');
+    void chip.offsetWidth;
+    chip.classList.add('chip-flash');
+  }
+
+  function render() {
+    const n = statements.length;
+
+    document.getElementById('stmt-badge').textContent =
+      `${n} statement${n !== 1 ? 's' : ''}`;
+
+    animCount(document.getElementById('ring-num'), n);
+    setRing(n);
+
+    if (n > 0) {
+      const last = statements[n - 1];
+      document.getElementById('meta-verb').textContent  = verbOf(last);
+      document.getElementById('meta-actor').textContent = actorOf(last);
+    } else {
+      document.getElementById('meta-verb').textContent  = '—';
+      document.getElementById('meta-actor').textContent = '—';
     }
 
-    let statements = loadStatements();
-    render(statements);
+    if (!sessionStart && n > 0) {
+      sessionStart = new Date();
+      document.getElementById('meta-start').textContent =
+        sessionStart.toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+    } else if (n === 0) {
+      sessionStart = null;
+      document.getElementById('meta-start').textContent = '—';
+    }
 
-    window.addEventListener("message", (event) => {
-      const data = event.data;
-      if (!data || data.type !== "xapi" || !data.statement) return;
+    /* verb bars */
+    const vc = {};
+    for (const s of statements) { const v = verbOf(s); vc[v] = (vc[v] || 0) + 1; }
+    const vbEl = document.getElementById('verb-list');
+    if (!Object.keys(vc).length) {
+      vbEl.innerHTML = '<span class="empty">Awaiting interactions…</span>';
+    } else {
+      const mx = Math.max(...Object.values(vc));
+      vbEl.innerHTML = Object.entries(vc)
+        .sort((a,b) => b[1]-a[1])
+        .map(([v, c]) => {
+          const col = VERB_COLORS[v] || FALLBACK_CLR;
+          return `<div class="verb-row">
+            <div class="verb-row-hdr">
+              <span class="verb-name">${v}</span>
+              <span class="verb-ct">${c}</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width:${(c/mx)*100}%;background:${col}"></div>
+            </div>
+          </div>`;
+        }).join('');
+    }
 
-      statements.push(data.statement);
-      saveStatements(statements);
-      render(statements);
-      console.log("xAPI captured:", data.statement);
+    /* timeline */
+    const tlEl = document.getElementById('timeline');
+    if (!n) {
+      tlEl.innerHTML = '<span class="empty">No events yet…</span>';
+    } else {
+      tlEl.innerHTML = statements.slice(-8).reverse()
+        .map((s, i) => {
+          const v   = verbOf(s);
+          const col = VERB_COLORS[v] || FALLBACK_CLR;
+          const obj = objOf(s);
+          return `<div class="tl-item" style="animation-delay:${i*.04}s">
+            <div class="tl-dot" style="background:${col};box-shadow:0 0 5px ${col}"></div>
+            <div>
+              <div class="tl-verb" style="color:${col}">${v}</div>
+              ${obj ? `<div class="tl-obj">${obj}</div>` : ''}
+            </div>
+          </div>`;
+        }).join('');
+    }
+
+    /* raw log */
+    const logEl = document.getElementById('raw-log');
+    if (!n) {
+      logEl.innerHTML = '<span class="log-empty">Waiting for statements…</span>';
+    } else {
+      logEl.textContent = JSON.stringify(statements, null, 2);
+      logEl.scrollTop   = logEl.scrollHeight;
+    }
+  }
+
+  /* boot */
+  statements = load();
+  render();
+
+  /* listen for xAPI messages from Storyline */
+  window.addEventListener('message', e => {
+    const d = e.data;
+    if (!d || d.type !== 'xapi' || !d.statement) return;
+    statements.push(d.statement);
+    save(statements);
+    render();
+    flashChip();
+    console.log('[xAPI]', d.statement);
+  });
+
+  document.getElementById('btn-clear').addEventListener('click', () => {
+    statements = []; sessionStart = null;
+    save(statements); render();
+  });
+
+  document.getElementById('btn-download').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(statements, null, 2)], {type:'application/json'});
+    const a    = Object.assign(document.createElement('a'), {
+      href:     URL.createObjectURL(blob),
+      download: 'xapi-statements.json',
     });
-
-    document.getElementById("clear").addEventListener("click", () => {
-      statements = [];
-      saveStatements(statements);
-      render(statements);
-    });
-
-    document.getElementById("download").addEventListener("click", () => {
-      const blob = new Blob(
-        [JSON.stringify(statements, null, 2)],
-        { type: "application/json" }
-      );
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = "xapi-statements.json";
-      a.click();
-      URL.revokeObjectURL(a.href);
-    });
+    a.click();
+    URL.revokeObjectURL(a.href);
+  });
   </script>
 </body>
 </html>
-
